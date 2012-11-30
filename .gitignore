@@ -1,0 +1,6 @@
+Gemfile.lock
+*.gem
+pkg
+rdoc
+tmp
+.rbenv-version
