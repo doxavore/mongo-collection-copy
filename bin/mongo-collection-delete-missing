@@ -1,0 +1,78 @@
+#!/usr/bin/env ruby
+
+require File.expand_path('../../lib/mongo_collection_copy', __FILE__)
+require 'optparse'
+
+options = {}
+
+parser = OptionParser.new do |opts|
+  opts.on "-s", "--source MONGOURL", "Check for existence in this MongoDB connection URL" do |arg|
+    options[:source] = arg
+  end
+
+  opts.on "-D", "--delete-from MONGOURL", "Delete from this MongoDB connection URL" do |arg|
+    options[:delete_from] = arg
+  end
+
+  opts.on "-c", "--collection COLLECTION_NAME", "Collection name to be copied" do |arg|
+    options[:collection] = arg
+  end
+end
+
+parser.banner = "mongo-collection-delete-missing [options]"
+
+parser.on_tail "-h", "--help", "Show help" do
+  puts parser
+  exit 1
+end
+
+parser.parse(ARGV)
+options[:finder] ||= :max_id
+
+[:source, :delete_from, :collection].each do |required|
+  unless options.key?(required)
+    puts parser
+    puts ""
+    puts "Connection URLs can be given in the format:"
+    puts "  mongodb://[username:password@]host[:port]/database"
+    puts "For example, a local connection without authentication:"
+    puts "  mongodb://localhost:27017/test"
+    puts ""
+    puts "ERROR: --#{required.to_s.gsub(/_/, '-')} is a required argument."
+    exit 1
+  end
+end
+
+print "\nConnecting..."
+deleter = MongoCollectionCopy::Deleter.new(options[:source],
+                                           options[:delete_from],
+                                           options[:collection])
+puts "CONNECTED!"
+
+class StatsPrinter
+  class << self
+    def print_stats(deleter)
+      puts "%-24s %s" % ["Source Documents:", deleter.total_source_documents]
+      puts "%-24s %s" % ["Delete-From Documents:", deleter.total_delete_from_documents]
+      puts ""
+    end
+  end
+end
+
+puts "\nCalculating start and end points..."
+puts ""
+StatsPrinter.print_stats(deleter)
+
+trap("INT") do
+  puts "Delete has been terminated!"
+  puts ""
+  StatsPrinter.print_stats(deleter)
+  exit 0
+end
+
+deleter.run
+puts "Delete has completed!"
+puts ""
+StatsPrinter.print_stats(deleter)
+
+# vim: set ft=ruby:

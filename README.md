@@ -30,3 +30,7 @@ To get a full list of options:
 When specifying a finder (`-f`) your options are:
 * max_id: The fastest option, it looks at the max \_id present in the destination collection and starts from there.
 * enumerate: For each record in the source collection, insert into the destination collection if it isn't already present.
+
+If you need to delete any records in the destination collection that have since been removed from the source collection:
+
+    ./bin/mongo-collection-delete-missing -s mongodb://user:pass@127.0.0.1/my_db -D mongodb://user:pass@10.1.2.3/other_db -c my_coll
