@@ -2,11 +2,7 @@ require 'mongo'
 
 module MongoCollectionCopy
   class Copier
-    attr_accessor :delete_last_dest_before_run
-
     def initialize(source, dest, coll_name, finder = :max_id)
-      @delete_last_dest_before_run = true
-
       @source = Mongo::Connection.from_uri(source)
       @source_db = @source[source.split('/').last]
       @source_coll = @source_db[coll_name]
@@ -27,9 +23,6 @@ module MongoCollectionCopy
     end
 
     def run
-      # To ensure a clean move, delete the last item copied, as it may be corrupt
-      delete_last_dest_document if delete_last_dest_before_run
-
       while next_doc = finder.next_source_doc_to_copy
         next_doc_id = next_doc['_id']
         res = dest_coll.update({'_id' => next_doc_id},
@@ -51,11 +44,5 @@ module MongoCollectionCopy
     private
 
     attr_reader :dest_coll, :source_coll, :finder
-
-    def delete_last_dest_document
-      if doc = finder.last_dest_document
-        dest_coll.remove({'_id' => doc['_id']})
-      end
-    end
   end
 end
