@@ -4,10 +4,7 @@ module MongoCollectionCopy
       def initialize(source_coll, dest_coll)
         @source_coll = source_coll
         @dest_coll = dest_coll
-      end
-
-      def last_dest_document
-        dest_coll.find().sort({'_id' => -1}).limit(1).first
+        @first_doc = true
       end
 
       def next_source_doc_to_copy
@@ -16,6 +13,7 @@ module MongoCollectionCopy
 
       private
 
+      attr_accessor :first_doc
       attr_reader :dest_coll, :source_coll
 
     end

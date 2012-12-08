@@ -18,9 +18,16 @@ module MongoCollectionCopy
         end
 
         if nid != END_OF_COLLECTION
-          # Store our current position
-          self.current_id = nid
-          doc = source_coll.find({'_id' => nid}).limit(1).first
+          if first_doc
+            # On the first query, re-update the last record imported
+            doc = source_coll.find({'_id' => current_id}).limit(1).first
+            # Don't set current_id and let the next query do that
+            self.first_doc = false
+          else
+            doc = source_coll.find({'_id' => nid}).limit(1).first
+            # Store our current position
+            self.current_id = nid
+          end
         else
           nil
         end
