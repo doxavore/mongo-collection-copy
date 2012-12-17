@@ -37,15 +37,16 @@ module MongoCollectionCopy
 
       attr_accessor :current_id
 
+      # Start with the most recent and work your way back
       def next_id
         if current_id
-          query = {'_id' => {'$gt' => current_id}}
+          query = {'_id' => {'$lt' => current_id}}
         else
           # Find the first document, if any
           query = {}
         end
 
-        next_doc = source_coll.find(query, {:fields => ['_id']}).sort({'_id' => 1}).limit(1).first
+        next_doc = source_coll.find(query, {:fields => ['_id']}).sort({'_id' => -1}).limit(1).first
         next_doc ? next_doc['_id'] : END_OF_COLLECTION
       end
 
